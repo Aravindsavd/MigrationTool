@@ -4,7 +4,8 @@
 Aravind S's DevOps & Cloud Engineering Portfolio
 
 Live interactive demo showing Windows File Explorer-style migration from on-prem storage to SharePoint/OneDrive (SaaS), deployed on Azure Container Apps with a full CI/CD pipeline.
-![Uploading image.png…]()
+<img width="1767" height="940" alt="image" src="https://github.com/user-attachments/assets/c303a39b-4d90-4aef-982f-d303f0662b09" />
+
 
 ---
 
