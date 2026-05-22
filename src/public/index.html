@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Migration Tracker · Aravind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F5F4F0; --surface: #FFFFFF; --surface2: #EFEDE8;
+    --border: #DDDBD5; --border2: #C8C5BE; --text: #1A1917;
+    --text2: #6B6860; --text3: #9C9A94;
+    --blue: #1B4FD8; --blue-light: #EBF0FD; --blue-mid: #92A8F0;
+    --green: #0F7B4A; --green-light: #E6F5EE;
+    --amber: #A05C00; --amber-light: #FEF3E2;
+    --red: #B91C1C; --red-light: #FEE2E2;
+    --radius: 10px; --radius-lg: 14px;
+    --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 54px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { display: flex; align-items: center; gap: 10px; }
+  .nav-brand .logo { width: 28px; height: 28px; background: var(--blue); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .nav-brand .logo svg { width: 16px; height: 16px; fill: white; }
+  .nav-brand span { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--green-light); color: var(--green); font-weight: 500; display: flex; align-items: center; gap: 5px; }
+  .nav-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .nav-version { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-header p { color: var(--text2); font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.75rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+  .stat-card .label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-card .value { font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  .stat-card .sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .val-blue { color: var(--blue); } .val-green { color: var(--green); } .val-amber { color: var(--amber); }
+
+  .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-header span { font-size: 13px; font-weight: 500; }
+  .pct { font-family: var(--mono); font-size: 13px; color: var(--blue); }
+  .progress-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue) 0%, #4F7BF7 100%); border-radius: 4px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+
+  .path-config { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
+  .path-config h3 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .path-row { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 12px; align-items: end; }
+  .path-field { display: flex; flex-direction: column; gap: 5px; }
+  .path-field label { font-size: 12px; color: var(--text3); font-weight: 500; }
+  .path-input-wrap { display: flex; gap: 6px; }
+  .path-input { flex: 1; padding: 7px 10px; border: 1px solid var(--border2); border-radius: var(--radius); font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--surface2); outline: none; transition: border 0.15s; }
+  .path-input:focus { border-color: var(--blue); background: white; }
+  .browse-btn { padding: 7px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text2); font-family: var(--font); font-size: 12px; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+  .browse-btn:hover { background: var(--surface2); color: var(--text); }
+  .path-arrow { display: flex; align-items: center; justify-content: center; color: var(--blue-mid); font-size: 20px; padding-bottom: 2px; }
+  .add-files-btn { margin-top: 10px; padding: 7px 16px; border: 1px dashed var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); font-family: var(--font); font-size: 13px; cursor: pointer; width: 100%; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .add-files-btn:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+
+  .explorer-grid { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 0; align-items: start; margin-bottom: 1.5rem; }
+  .explorer-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .exp-titlebar { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .exp-titlebar .icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .icon-onprem { background: var(--blue-light); } .icon-saas { background: var(--green-light); }
+  .exp-titlebar .name { font-weight: 600; font-size: 13px; flex: 1; }
+  .exp-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge-onprem { background: var(--blue-light); color: var(--blue); }
+  .badge-saas { background: var(--green-light); color: var(--green); }
+  .exp-addressbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; align-items: center; gap: 6px; }
+  .addr-box { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; font-size: 12px; font-family: var(--mono); color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .col-headers { display: grid; grid-template-columns: 20px 1fr 70px 80px; gap: 8px; padding: 5px 14px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; background: var(--surface2); }
+  .filter-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { font-size: 12px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; font-family: var(--font); transition: all 0.1s; }
+  .filter-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .filter-label { font-size: 12px; color: var(--text3); margin-right: 2px; }
+  .file-list { min-height: 240px; }
+  .file-row { display: grid; grid-template-columns: 20px 1fr 70px 80px; gap: 8px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; font-size: 13px; }
+  .file-row:last-child { border-bottom: none; }
+  .file-row:hover { background: var(--surface2); }
+  .file-row.is-selected { background: var(--blue-light); }
+  .file-row.is-selected:hover { background: #dce7fc; }
+  .file-row.is-migrated { opacity: 0.4; cursor: default; }
+  .file-row.is-migrating { background: var(--amber-light); cursor: default; }
+  .file-check { width: 14px; height: 14px; border: 1.5px solid var(--border2); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+  .file-row.is-selected .file-check { background: var(--blue); border-color: var(--blue); color: white; }
+  .fname { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 7px; }
+  .fsize { font-family: var(--mono); font-size: 12px; color: var(--text3); text-align: right; }
+  .fstatus { font-size: 11px; text-align: right; font-weight: 500; }
+  .status-local { color: var(--text3); } .status-migrating { color: var(--amber); } .status-done { color: var(--green); }
+
+  .mid-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 0 8px; min-height: 300px; }
+  .mid-arrow { color: var(--blue-mid); font-size: 22px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.5;transform:translateX(0)} 50%{opacity:1;transform:translateX(3px)} }
+  .btn-primary { width: 84px; padding: 9px 0; border: none; border-radius: var(--radius); background: var(--blue); color: white; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: #1340b0; } .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { background: var(--surface2); color: var(--text3); cursor: not-allowed; transform: none; }
+  .btn-secondary { width: 84px; padding: 8px 0; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: background 0.15s; }
+  .btn-secondary:hover { background: var(--surface2); }
+  .btn-danger { width: 84px; padding: 7px 0; border: 1px solid #fca5a5; border-radius: var(--radius); background: var(--red-light); color: var(--red); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: background 0.15s; }
+  .btn-danger:hover { background: #fee2e2; }
+
+  .saas-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 10px; color: var(--text3); }
+  .saas-empty .big-icon { font-size: 40px; opacity: 0.3; }
+  .saas-empty p { font-size: 13px; }
+
+  .log-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .log-header { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .log-header span { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .log-clear { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font); }
+  .log-clear:hover { color: var(--text); }
+  .log-body { padding: 10px 14px; max-height: 120px; overflow-y: auto; font-family: var(--mono); font-size: 12px; line-height: 1.8; }
+  .log-line { display: flex; gap: 10px; }
+  .log-ts { color: var(--text3); flex-shrink: 0; }
+  .log-msg { color: var(--text2); }
+  .log-ok { color: var(--green); } .log-active { color: var(--amber); } .log-info { color: var(--blue); }
+
+  .report-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: none; }
+  .report-section.visible { display: block; }
+  .report-header { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+  .report-header h2 { font-size: 15px; font-weight: 600; }
+  .report-header .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--green-light); color: var(--green); font-weight: 600; }
+  .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .report-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .report-item .rlabel { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .report-item .rvalue { font-size: 16px; font-weight: 600; font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="logo"><svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zM2 7h8v2H2zM2 11h10v2H2z"/></svg></div>
+    <span>Migration Tracker</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-pill">Live on Azure Container Apps</span>
+    <span class="nav-version" id="ver-badge">v-local</span>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>On-Premises → SaaS Migration</h1>
+    <p>Interactive file migration demo · Aravind's DevOps &amp; Cloud Engineering Portfolio</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="label">Total Files</div><div class="value" id="s-total">0</div><div class="sub">on-premises</div></div>
+    <div class="stat-card"><div class="label">Migrated</div><div class="value val-green" id="s-done">0</div><div class="sub">to cloud SaaS</div></div>
+    <div class="stat-card"><div class="label">Remaining</div><div class="value val-amber" id="s-rem">0</div><div class="sub">pending</div></div>
+    <div class="stat-card"><div class="label">Data Moved</div><div class="value val-blue" id="s-data">0 MB</div><div class="sub">transferred</div></div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-header"><span>Migration Progress</span><span class="pct" id="prog-pct">0%</span></div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- PATH CONFIG -->
+  <div class="path-config">
+    <h3>📁 Configure Paths</h3>
+    <div class="path-row">
+      <div class="path-field">
+        <label>Source — On-Premises path</label>
+        <div class="path-input-wrap">
+          <input class="path-input" id="src-path" value="C:\Users\Aravind\Documents\OnPrem_Data" placeholder="C:\your\onprem\folder" />
+          <button class="browse-btn" onclick="document.getElementById('folder-picker').click()">📁 Folder</button>
+          <button class="browse-btn" onclick="document.getElementById('file-picker').click()">📄 Files</button>
+        </div>
+        <input type="file" id="file-picker" multiple style="display:none" onchange="handleFilePick(event)" />
+        <input type="file" id="folder-picker" multiple webkitdirectory style="display:none" onchange="handleFilePick(event)" />
+      </div>
+      <div class="path-arrow">→</div>
+      <div class="path-field">
+        <label>Destination — SaaS / cloud path</label>
+        <div class="path-input-wrap">
+          <input class="path-input" id="dst-path" value="https://company.sharepoint.com/sites/MigratedData" placeholder="https://your.sharepoint.com/..." />
+          <button class="browse-btn" onclick="applyDest()">✓ Set</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="add-files-btn" style="flex:1" onclick="document.getElementById('folder-picker').click()">
+        📁 Browse entire folder from disk
+      </button>
+      <button class="add-files-btn" style="flex:1" onclick="document.getElementById('file-picker').click()">
+        📄 Pick individual files
+      </button>
+    </div>
+  </div>
+
+  <div class="report-section" id="report-section">
+    <div class="report-header"><h2>Migration Complete</h2><span class="badge">✓ All files migrated</span></div>
+    <div class="report-grid">
+      <div class="report-item"><div class="rlabel">Files migrated</div><div class="rvalue" id="r-files">0</div></div>
+      <div class="report-item"><div class="rlabel">Data transferred</div><div class="rvalue" id="r-data">0 MB</div></div>
+      <div class="report-item"><div class="rlabel">Duration</div><div class="rvalue" id="r-time">0s</div></div>
+    </div>
+  </div>
+
+  <div class="explorer-grid">
+    <!-- ON-PREM -->
+    <div class="explorer-panel">
+      <div class="exp-titlebar">
+        <div class="icon icon-onprem">🖥️</div>
+        <span class="name">On-Premises Storage</span>
+        <span class="exp-badge badge-onprem">Local Disk</span>
+      </div>
+      <div class="exp-addressbar">
+        <div class="exp-toolbar-icons">
+          <button class="tbtn">←</button><button class="tbtn">→</button><button class="tbtn">↑</button>
+        </div>
+        <div class="addr-box" id="src-addr">C:\Users\Aravind\Documents\OnPrem_Data</div>
+      </div>
+      <div class="col-headers">
+        <div></div><div>Name</div><div style="text-align:right">Size</div><div style="text-align:right">Status</div>
+      </div>
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('file',this)">Files</button>
+        <button class="filter-btn" onclick="setFilter('folder',this)">Folders</button>
+        <button class="filter-btn" onclick="setFilter('local',this)">Pending</button>
+      </div>
+      <div class="file-list" id="onprem-list">
+        <div class="saas-empty">
+          <div class="big-icon">🖥️</div>
+          <p>No files added yet</p>
+          <p>Click "Browse" or "Add files" above</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MID -->
+    <div class="mid-col">
+      <div class="mid-arrow">→</div>
+      <button class="btn-primary" id="btn-migrate" onclick="migrateSelected()" disabled>
+        <span style="font-size:18px">⬆</span>Migrate
+      </button>
+      <button class="btn-secondary" onclick="migrateAll()">
+        <span style="font-size:14px">⇉</span>All files
+      </button>
+      <button class="btn-danger" onclick="resetAll()">
+        <span style="font-size:14px">↺</span>Reset
+      </button>
+    </div>
+
+    <!-- SAAS -->
+    <div class="explorer-panel">
+      <div class="exp-titlebar">
+        <div class="icon icon-saas">☁️</div>
+        <span class="name">SaaS Cloud Storage</span>
+        <span class="exp-badge badge-saas">SharePoint / OneDrive</span>
+      </div>
+      <div class="exp-addressbar">
+        <div class="exp-toolbar-icons">
+          <button class="tbtn">←</button><button class="tbtn">→</button><button class="tbtn">↑</button>
+        </div>
+        <div class="addr-box" id="dst-addr">https://company.sharepoint.com/sites/MigratedData</div>
+      </div>
+      <div class="col-headers">
+        <div></div><div>Name</div><div style="text-align:right">Size</div><div style="text-align:right">Status</div>
+      </div>
+      <div class="file-list" id="saas-list">
+        <div class="saas-empty" id="saas-empty">
+          <div class="big-icon">☁️</div>
+          <p>No files yet</p>
+          <p>Migrate files from on-prem to see them here</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header">
+      <span>📋 Migration Log</span>
+      <button class="log-clear" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-body" id="log-body">
+      <div class="log-line"><span class="log-ts">--:--:--</span><span class="log-msg log-info">System ready. Browse files from your disk or add files above to begin.</span></div>
+    </div>
+  </div>
+</main>
+
+<script>
+let state = [];
+let migrating = false;
+let activeFilter = 'all';
+let startTime = null;
+
+function getIcon(name, type) {
+  if (type === 'folder') return '📁';
+  const ext = name.split('.').pop().toLowerCase();
+  const map = { xlsx:'📊', xls:'📊', csv:'📊', pptx:'📑', ppt:'📑', docx:'📄', doc:'📄', pdf:'🧾', zip:'🗜️', rar:'🗜️', json:'⚙️', xml:'⚙️', sql:'🗄️', db:'🗄️', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', gif:'🖼️', mp4:'🎬', mp3:'🎵', txt:'📝', log:'📝', sh:'💻', js:'💻', py:'💻', ts:'💻' };
+  return map[ext] || '📄';
+}
+
+function formatSize(bytes) {
+  if (bytes === 0) return '—';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function handleFilePick(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  // Detect if folder was picked (webkitRelativePath has folder/file structure)
+  const isFolder = files[0].webkitRelativePath && files[0].webkitRelativePath.includes('/');
+  let displayPath = 'Selected files';
+  if (isFolder) {
+    // Get the root folder name from the relative path
+    const rootFolder = files[0].webkitRelativePath.split('/')[0];
+    displayPath = 'C:\\Users\\Aravind\\' + rootFolder;
+  }
+  document.getElementById('src-path').value = displayPath;
+  document.getElementById('src-addr').textContent = displayPath;
+
+  files.forEach(f => {
+    // avoid duplicates
+    if (state.find(s => s.name === f.name && s.size === formatSize(f.size))) return;
+    state.push({
+      id: Date.now() + Math.random(),
+      name: f.name,
+      icon: getIcon(f.name, 'file'),
+      size: formatSize(f.size),
+      bytes: f.size / (1024*1024),
+      type: 'file',
+      status: 'local',
+      selected: false
+    });
+  });
+
+  log(`Added ${files.length} file(s) from disk`, 'log-info');
+  renderOnprem(); updateStats(); updateMigrateBtn();
+  e.target.value = '';
+}
+
+function applyDest() {
+  const val = document.getElementById('dst-path').value.trim();
+  if (val) {
+    document.getElementById('dst-addr').textContent = val;
+    log(`Destination set to: ${val}`, 'log-info');
+  }
+}
+
+function ts() {
+  const n = new Date();
+  return [n.getHours(), n.getMinutes(), n.getSeconds()].map(x => String(x).padStart(2,'0')).join(':');
+}
+
+function log(msg, cls='') {
+  const body = document.getElementById('log-body');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">${ts()}</span><span class="log-msg ${cls}">${msg}</span>`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+
+function clearLog() { document.getElementById('log-body').innerHTML = ''; }
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOnprem();
+}
+
+function filteredFiles() {
+  return state.filter(f => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'file') return f.type === 'file';
+    if (activeFilter === 'folder') return f.type === 'folder';
+    if (activeFilter === 'local') return f.status === 'local';
+    return true;
+  });
+}
+
+function renderOnprem() {
+  const list = document.getElementById('onprem-list');
+  const files = filteredFiles();
+  if (files.length === 0 && state.length === 0) {
+    list.innerHTML = `<div class="saas-empty"><div class="big-icon">🖥️</div><p>No files added yet</p><p>Click "Browse" or "Add files" above</p></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  files.forEach(f => {
+    const row = document.createElement('div');
+    const cls = ['file-row'];
+    if (f.selected) cls.push('is-selected');
+    if (f.status === 'migrated') cls.push('is-migrated');
+    if (f.status === 'migrating') cls.push('is-migrating');
+    row.className = cls.join(' ');
+    const statusText = f.status === 'migrated' ? '✓ Done' : f.status === 'migrating' ? '↑ Moving' : 'Local';
+    const statusCls = f.status === 'migrated' ? 'status-done' : f.status === 'migrating' ? 'status-migrating' : 'status-local';
+    row.innerHTML = `<div class="file-check">${f.selected ? '✓' : ''}</div><div class="fname"><span>${f.icon}</span><span>${f.name}</span></div><div class="fsize">${f.size}</div><div class="fstatus ${statusCls}">${statusText}</div>`;
+    if (f.status === 'local') {
+      row.onclick = () => { f.selected = !f.selected; updateMigrateBtn(); renderOnprem(); };
+    }
+    list.appendChild(row);
+  });
+}
+
+function renderSaas() {
+  const list = document.getElementById('saas-list');
+  const migrated = state.filter(f => f.status === 'migrated');
+  if (migrated.length === 0) {
+    list.innerHTML = `<div class="saas-empty"><div class="big-icon">☁️</div><p>No files yet</p><p>Migrate files from on-prem to see them here</p></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  migrated.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `<div class="file-check" style="background:#0F7B4A;border-color:#0F7B4A;color:white;font-size:10px;">✓</div><div class="fname"><span>${f.icon}</span><span>${f.name}</span></div><div class="fsize">${f.size}</div><div class="fstatus status-done">☁ Cloud</div>`;
+    list.appendChild(row);
+  });
+}
+
+function updateStats() {
+  const total = state.length;
+  const done = state.filter(f => f.status === 'migrated').length;
+  const rem = state.filter(f => f.status === 'local').length;
+  const dataMoved = state.filter(f => f.status === 'migrated').reduce((s,f) => s + f.bytes, 0);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-rem').textContent = rem;
+  document.getElementById('s-data').textContent = dataMoved.toFixed(1) + ' MB';
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  if (total > 0 && done === total) {
+    const elapsed = startTime ? ((Date.now() - startTime) / 1000).toFixed(1) : '0';
+    document.getElementById('r-files').textContent = done;
+    document.getElementById('r-data').textContent = dataMoved.toFixed(1) + ' MB';
+    document.getElementById('r-time').textContent = elapsed + 's';
+    document.getElementById('report-section').classList.add('visible');
+  }
+}
+
+function updateMigrateBtn() {
+  const has = state.some(f => f.selected && f.status === 'local');
+  document.getElementById('btn-migrate').disabled = !has || migrating;
+}
+
+async function migrateFiles(files) {
+  if (migrating || files.length === 0) return;
+  migrating = true;
+  if (!startTime) startTime = Date.now();
+  updateMigrateBtn();
+  log(`Starting migration of ${files.length} file(s)...`, 'log-info');
+  for (const f of files) {
+    f.selected = false;
+    f.status = 'migrating';
+    renderOnprem(); renderSaas(); updateStats();
+    log(`Uploading: ${f.name} (${f.size})`, 'log-active');
+    await new Promise(r => setTimeout(r, 500 + Math.random() * 700));
+    f.status = 'migrated';
+    renderOnprem(); renderSaas(); updateStats();
+    log(`✓ Migrated: ${f.name}`, 'log-ok');
+  }
+  migrating = false;
+  updateMigrateBtn();
+  const done = state.filter(f => f.status === 'migrated').length;
+  if (done === state.length && state.length > 0) log('🎉 All files successfully migrated to SaaS cloud storage!', 'log-ok');
+}
+
+function migrateSelected() { migrateFiles(state.filter(f => f.selected && f.status === 'local')); }
+function migrateAll() { migrateFiles(state.filter(f => f.status === 'local')); }
+
+function resetAll() {
+  if (migrating) return;
+  state = [];
+  startTime = null;
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('report-section').classList.remove('visible');
+  clearLog();
+  log('Reset complete. Add files to begin a new migration run.', 'log-info');
+  renderOnprem(); renderSaas(); updateStats(); updateMigrateBtn();
+}
+
+fetch('/api/health').then(r=>r.json()).then(d=>{
+  document.getElementById('ver-badge').textContent = 'v-' + (d.version||'local').slice(0,7);
+}).catch(()=>{});
+
+// sync path inputs to address bars
+document.getElementById('src-path').addEventListener('input', e => {
+  document.getElementById('src-addr').textContent = e.target.value;
+});
+document.getElementById('dst-path').addEventListener('input', e => {
+  document.getElementById('dst-addr').textContent = e.target.value;
+});
+
+renderOnprem(); renderSaas(); updateStats(); updateMigrateBtn();
+</script>
+</body>
+</html>
